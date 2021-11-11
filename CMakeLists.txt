@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 project(Hemisphere VERSION 0.0.1)
 
-add_subdirectory(hmath)
-add_executable(Hemisphere bitset.c data_mem.c main.c)
-target_link_libraries(Hemisphere PUBLIC HMath)
+add_subdirectory(lib)
 
+add_executable(Hemisphere
+	src/bitset.c
+	src/data_mem.c
+	src/main.c
+)
+target_include_directories(Hemisphere PUBLIC include)
+target_link_libraries(Hemisphere PUBLIC hmath)
 install(TARGETS Hemisphere DESTINATION bin)
 
 include(InstallRequiredSystemLibraries)

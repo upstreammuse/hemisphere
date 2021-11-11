@@ -1,9 +1,11 @@
+#include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 
 namespace h {
+#include "bitset.h"
 #include "hmath.h"
 }
 
@@ -21,6 +23,19 @@ int main() {
 
 	std::cout << "attempting to solve an equation" << std::endl;
 	std::cout << h::nsolve(math_func, 0, 10) << std::endl;
+
+
+	h::BITSET* b = h::new_bitset(13);
+	h::set_bit(b, 12);
+	h::set_bit(b, 3);
+	h::set_bit(b, 6);
+	h::set_bit(b, 7);
+	h::set_bit(b, 0);
+	assert(h::find_clear_bit(b, 12) == (size_t)-1);
+	assert(h::find_clear_bit(b, 6) == 8);
+	assert(h::find_clear_bit(b, 1) == 1);
+	print_bitset(stdout, b);
+	free(b);
 
 	return 0;
 }

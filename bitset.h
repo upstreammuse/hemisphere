@@ -4,10 +4,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct bitset BITSET;
 
 /* starting with given start value, find the first clear bit */
@@ -32,9 +28,5 @@ void print_bitset(FILE*, BITSET*);
 
 /* set the value of the specified bit */
 void set_bit(BITSET*, size_t index);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

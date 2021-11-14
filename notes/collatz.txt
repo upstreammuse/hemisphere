@@ -1,0 +1,165 @@
+Sample code to test the collatz conjecture up to 4000000.
+- Requires 32 bit integer math
+- Requires subroutine calls
+- Can use parallel code to stream the calculations
+
+In original Inc style, it looks something like this:
+
+// generate 1 to 4e6, then -1 to stop
+sequence: block(n: int!) {
+	block (c: int) {
+		c = 0;
+		while (c < 4000000) {
+			n ! c;
+			c = c + 1;
+		}
+	}
+	n ! -1;
+}
+
+// calculate the next collatz number
+// this is beyond original Inc, but in line with plans
+collatz: func(n: int) -> int {
+	if (n % 2 == 0) {
+		return n / 2;
+	}
+	else {
+		return 3 * n + 1;
+	}
+}
+
+// count the sequence length for a starting number
+count: block(n: int?, c: int!) {
+	block (x: int, cc, int) {
+		while (true) {
+			n ? x;
+			if (x == -1) {
+				c ! -1;
+				return;
+			}
+			cc = 0;
+			while (x != 1) {
+				x = collatz(x);
+				cc = cc + 1;
+			}
+			c ! cc;
+		}
+	}
+}
+
+// keep a running max tally
+max: block(n: int?, max: int!) {
+	block (m: int, x: int) {
+		m = 0;
+		while (true) {
+			n ? x;
+			if (x == -1) {
+				max ! m;
+				return;
+			}
+			else if (x > m) {
+				m = x;
+			}
+		}
+	}
+}
+
+// run the blocks
+main: block(ans: int!) {
+	par(nums: int?!, lengths: int?!) {
+		sequence(nums);
+		count(nums, lengths);
+		max(lengths, ans);
+	}
+}
+
+Notice the way blocks tend to have certain unpleasant boilerplate to them.
+
+Let's create some 'standard library' to address that pattern.
+
+map<T>: block(func: (T) -> T, inputs: T?, outputs: T!, inputdone: bool?, outputdone: bool!) {
+	block(x: T, d: bool) {
+		d = false;
+		while (!d) {
+			alt (inputs ? x) {
+				x = func(x);
+				outputs ! x;
+			}
+			else alt (inputdone ? d) {
+				outputdone ! d;
+			}
+		}
+	}
+}
+
+Then `count` becomes a function that counts the cycle length for a single input.
+
+reduce<T>: block(func: (T, T) -> T, inputs: T?, outputs: T!, inputdone: bool?, starter: T) {
+	block(x: T, y: T, d: bool) {
+		y = starter;
+		d = false;
+		while (!d) {
+			alt (inputs ? x) {
+				y = func(y, x);
+			}
+			else alt (inputdone ? d) {
+				outputs ! y;
+				outputdone ! d;
+			}
+		}
+	}
+}
+
+Then `max` becomes a normal max function.
+
+main: block(ans: int!) {
+	par(nums: int?!, lengths: int?!, numsdone: bool?!, lengthsdone: bool?!) {
+		sequence(nums, numsdone);
+		map(count, nums, lengths, numsdone, lengthsdone);
+		reduce(max, lengths, ans, lengthsdone, 0);
+	}
+}
+
+Now what about the 'extra' boolean parameters that signal the end of the parallel stuff?
+
+I had the idea before that once a block can no longer use any of its channels, then that block is 'dead' and can be stopped without explicit return statements.  Along those lines, we have to have the ability to 'close' a channel  so that the block can keep track of which channels are open, and which are closed, and terminate when the last channel is closed.
+- How does that translate to hardware?  Probably still two channels under the hood.  But I'll keep that on the back burner to think about.
+
+// at the moment outputs is closed, this block can terminate because it can no longer affect the rest of the system
+map<T>: block(func: (T) -> T, inputs: T?, outputs: T!) {
+	block(x: T) {
+		while (true) {
+			alt (inputs ? x) {
+				x = func(x);
+				outputs ! x;
+			}
+			else alt (inputs ?X) {		// syntax TBD for "is closed", but looking for something that looks like "try to input and can't any more"
+				outputs !X;				// something that looks similar to close the output channel
+			}
+		}
+	}
+}
+
+// I observe that ?X only syncs with !X, and vice versa.  This corresponds to it being a secondary channel at the HW level, but conceptually also because channels are synchronous, so closing a channel on one end only makes sense if the other end can acknowledge the closure
+reduce<T>: block(func: (T, T) -> T, inputs: T?, output: T!, starter: T) {
+	block(x: T, y: T) {
+		y = starter;
+		while (true) {
+			alt (inputs ? x) {
+				y = func(y, x);
+			}
+			else alt (inputs ?X) {
+				output ! y;
+				output !X;
+			}
+		}
+	}
+}
+
+main: block(ans: int!) {
+	par(nums: int?!, lengths: int?!) {
+		sequence(nums);
+		map(count, nums, lengths);
+		reduce(max, lengths, ans, 0);
+	}
+}

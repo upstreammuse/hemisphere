@@ -11,6 +11,29 @@
 
 "use strict";
 
+function pop() {
+
+	// instruction decode
+	const SP_plus_A = SP_O + 1;
+	const SP_plus_high_A = SP_plus_A >> 8;
+	if (SP_plus_high_A != lastSP_O) {
+		stackPageFault();
+	}
+	const physicalAddr_A = (physicalPage_O << 8) + (SP_plus_A & 0xFF)
+
+	// clock up
+	const X_I = memory[physicalAddr_A];
+	const SP_I = SP_plus_A;
+	const lastSP_I = SP_high_A;
+
+	// clock down
+	X_O[0] = X_I;
+	SP_O = SP_I;
+	lastSP_O = lastSP_I;
+
+	updateUI();
+}
+
 function push() {
 
 	// instruction decode:
@@ -36,6 +59,7 @@ function push() {
 }
 
 // TODO needs to become assembly instructions once opcodes are implemented
+// TODO don't give out page 0, keep it reserved, and use it as a sentry value
 function stackPageFault() {
 alert("page fault");
 	// get physical page associated with virtual page

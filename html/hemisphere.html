@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>	SP		= <span id="SP"></span>,
+	Last SP Page	= <span id="lastSP"></span>,
+	Physical Page	= <span id="physicalPage"></span>
+</p>
+
+<script>
+
+"use strict";
+
+function push() {
+
+	// instruction decode:
+	const SP_minus_A = SP_O - 1;
+	const SP_high_A = SP_O >> 8;
+	if (SP_high_A != lastSP_O) {
+		stackPageFault();	// we have an SP that isn't in the same page as before
+	}				// and now we do
+	const physicalAddr_A = (physicalPage_O << 8) + (SP_O & 0xFF);
+
+	// clock up
+	const memory_addr_I = physicalAddr_A;
+	const memory_data_I = X_O[0];
+	const SP_I = SP_minus_A;
+	const lastSP_I = SP_high_A;
+
+	// clock down
+	memory[memory_addr_I] = memory_data_I;
+	SP_O = SP_I;
+	lastSP_O = lastSP_I;
+
+	updateUI();
+}
+
+// TODO needs to become assembly instructions once opcodes are implemented
+function stackPageFault() {
+alert("page fault");
+	// get physical page associated with virtual page
+	// if not found, kill the task?
+	// set physical SP to physical page
+	physicalPage_O = 0x11;
+	// set lastSP to current logical SP
+	lastSP_O = SP_O;
+}
+
+function updateUI() {
+	document.getElementById("lastSP").innerHTML = lastSP_O;
+	document.getElementById("physicalPage").innerHTML = physicalPage_O;
+	document.getElementById("SP").innerHTML = SP_O;
+}
+
+// 16 bit memory space
+let memory = [];
+memory[0xFFFF] = 42;
+
+// trigger a page fault to get the first stack page
+let physicalPage_O = 0;
+let lastSP_O = 0;
+let SP_O = 0xFFFF;
+
+// put something in X
+let X_O = [];
+X_O[0] = 111;
+
+push();
+push();
+
+alert(memory[0xFFFE]);
+alert(memory[0xFFFF]);
+alert(memory[0x11FF]);
+alert(memory[0x11FE]);
+
+</script>
+</body>
+</html>

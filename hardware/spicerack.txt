@@ -1,0 +1,55 @@
+Components and Connections
+
+			AReg
+A_NEXT_VAL ->	Input(8)	Output(8) ->	A_VAL
+CLK ->		Clock
+
+			BReg
+B_NEXT_VAL ->	Input(8)	Output(8) ->	B_VAL
+CLK ->		Clock
+
+			ARegMux
+ALU_RESULT ->	Input1(8)	Output(8) ->	A_NEXT_VAL
+A_VAL ->	Input2(8)
+B_VAL ->	Input3(8)
+		Select(2)
+
+			BRegMux
+ALU_RESULT ->	Input1(8)	Output(8) ->	B_NEXT_VAL
+A_VAL ->	Input2(8)
+B_VAL ->	Input3(8)
+		Select(2)
+
+			ALU
+A_VAL ->	InputA(8)	Output(8) ->	ALU_RESULT
+B_VAL ->	InputB(8)
+		Control(?)
+
+
+
+Truth Tables
+
+	ALU
+Control		Output
+		0
+		InputA << 1
+		InputA + 1
+		InputA + InputB
+		InputA - InputB
+
+
+
+Sample Operation
+1->A
+A<<1->A
+A+1->A
+A<<1->A
+A<<1->A
+A+1->A
+0->A, A->B
+A+1->A
+A<<1->A
+A<<1->A
+A+B->A
+
+With this we can build arbitrary numbers and add and subtract them, albeit not terribly efficiently.

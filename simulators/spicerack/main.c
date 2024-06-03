@@ -6,60 +6,49 @@
 #include "spicerack/counter.h"
 #include "spicerack/output.h"
 #include "spicerack/signal.h"
-
-struct Debugger {
-   struct Signal* I;
-   char* name;
-};
-
-void debugHandler(void* block) {
-   struct Debugger* d = block;
-   printf("%s: %s\n", d->name, signalValueStr(signalRead(d->I)));
-}
+#include "spicerack/watcher.h"
 
 int main(void) {
 
+   printf("*** clock test\n");
    {
-      struct Clock* clock;
-      struct Debugger d;
-      printf("clock test\n");
-      clock = clockNew();
-      d.I = signalNew(&d, debugHandler);
-      d.name = "clock";
-      clockConnect(clock, d.I);
+      struct Clock* clock = clockNew();
+      struct Watcher* w = watcherNew("clock");
+      clockConnect(clock, watcherClock(w));
+      clockConnect(clock, watcherInput(w));
       clockRun(clock, 2);
       clockFree(clock);
+      watcherFree(w);
    }
 
+   printf("*** and test\n");
    {
-      struct Debugger d;
-      int writerA = 46546;
-      int writerB = 94945;
       struct AndGate* gate = andGateNew();
-      printf("and test\n");
-      d.I = signalNew(&d, debugHandler);
-      d.name = "and";
-      andGateConnect(gate, d.I);
+      struct Watcher* w = watcherNew("and");
+      int writerA = allocateOutput();
+      int writerB = allocateOutput();
+      andGateConnect(gate, watcherInput(w));
       signalWrite(andGateInputA(gate), HIGH, writerA);
       signalWrite(andGateInputB(gate), HIGH, writerB);
       signalPropagate();
       andGateFree(gate);
+      watcherFree(w);
    }
 
+   printf("counter test\n");
    {
       int i;
       struct Clock* clock = clockNew();
       struct Counter* counter = counterNew();
-      struct Debugger d[4];
+      struct Watcher* w[4];
       int rstOID;
-      printf("counter test\n");
       clockConnect(clock, counterClock(counter));
       for (i = 0; i < 4; i++) {
          char buffer[10];
          sprintf(buffer, "signal%d", i);
-         d[i].I = signalNew(&d[i], debugHandler);
-         d[i].name = strdup(buffer);
-         counterConnect(counter, i, d[i].I);
+         w[i] = watcherNew(buffer);
+         clockConnect(clock, watcherClock(w[i]));
+         counterConnect(counter, i, watcherInput(w[i]));
       }
 
       /* TODO this should be a temporary pulldown not a magic pulse */
@@ -69,15 +58,11 @@ int main(void) {
       signalWrite(counterReset(counter), HIGH, rstOID);
       signalPropagate();
 
-      for (i = 0; i < 20; i++) {
-         printf("clock cycle %d\n", i);
-         clockRun(clock, 1);
-      }
+      clockRun(clock, 20);
       clockFree(clock);
       counterFree(counter);
       for (i = 0; i < 4; i++) {
-         signalFree(d[i].I);
-         free(d[i].name);
+         watcherFree(w[i]);
       }
    }
 

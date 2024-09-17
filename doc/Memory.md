@@ -10,45 +10,47 @@ Assuming the use of a commodity through-hole SRAM with 4 Mb capacity, a 19 bit a
 
 A 16-bit architecture simplifies things and works like so.  The largest possible page size is the entire 16 bit address space, leaving 8 pages in the system, which is silly.  The smallest possible page size is 4 bits, since a 16-bit page table entry can hold at most 15 bits of page address with no other protection bits.  It makes sense to allow at least one permission bit and state the minimum page size is 5 bits.  Within these boundaries, we can explore optimal page sizes.
 
-Page Size (bits)	Page Table Depth	Maximum Address Space (bits)	Delta from Ideal
-5			0			5				*********** 11
-			1			10				****** 6
-			2			15				* 1
-6			0			6				********** 10
-			1			12				**** 4
-			2			18				** 2
-7			0			7				********* 9
-			1			14				** 2
-			2			21				***** 5
-8			0			8				******** 8
-			1			16				0
-9			0			9				******* 7
-			1			18				** 2
-10			0			10				****** 6
-			1			20				**** 4
-11			0			11				***** 5
-			1			22				****** 6
-12			0			12				**** 4
-			1			24				******** 8
-13			0			13				*** 3
-			1			26				********** 10
-14			0			14				** 2
-			1			28				************ 12
-15			0			15				* 1
-			1			30				************** 14
-16			0			16				0
+| Page Size (bits)	| Page Table Depth	| Maximum Address Space (bits)	| Delta from Ideal
+| ---                | ---                | ---                            | ---
+| 5			         | 0			         | 5				                  | `***********` 11
+|                    | 1			         | 10				                  | `******` 6
+|                    | 2			         | 15				                  | `*` 1
+| 6			         | 0			         | 6				                  | `**********` 10
+|                    | 1		      	   | 12				                  | `****` 4
+|                    | 2			         | 18				                  | `**` 2
+| 7			         | 0			         | 7				                  | `*********` 9
+|                    | 1			         | 14				                  | `**` 2
+|			            | 2			         | 21				                  | `*****` 5
+| 8			         | 0			         | 8				                  | `********` 8
+|			            | 1			         | 16				                  | 0
+| 9			         | 0			         | 9				                  | `*******` 7
+|			            | 1			         | 18				                  | `**` 2
+| 10			         | 0			         | 10				                  | `******` 6
+|			            | 1			         | 20				                  | `****` 4
+| 11			         | 0			         | 11				                  | `*****` 5
+|			            | 1			         | 22				                  | `******` 6
+| 12			         | 0			         | 12				                  | `****` 4
+|			            | 1			         | 24				                  | `********` 8
+| 13			         | 0			         | 13				                  | `***` 3
+|			            | 1			         | 26				                  | `**********` 10
+| 14			         | 0			         | 14				                  | `**` 2
+|			            | 1			         | 28				                  | `************` 12
+| 15			         | 0			         | 15				                  | `*` 1
+|			            | 1			         | 30				                  | `**************` 14
+| 16			         | 0			         | 16				                  | 0
 
 Eliminating combinations with a delta greater than 2 leaves us with.
 
-Page Size (bits)	Page Table Depth	Maximum Address Space (bits)	Delta from Ideal
-5			2			15				* 1
-6			2			18				** 2
-7			1			14				** 2
-8			1			16				0
-9			1			18				** 2
-14			0			14				** 2
-15			0			15				* 1
-16			0			16				0
+| Page Size (bits)	| Page Table Depth	| Maximum Address Space (bits)	| Delta from Ideal
+|---                 |---                 |---                             |---
+| 5			         | 2			         | 15				                  | `*` 1
+| 6			         | 2			         | 18				                  | `**` 2
+| 7			         | 1			         | 14				                  | `**` 2
+| 8			         | 1			         | 16				                  | 0
+| 9			         | 1			         | 18				                  | `**` 2
+| 14			         | 0			         | 14				                  | `**` 2
+| 15			         | 0			         | 15				                  | `*` 1
+| 16			         | 0			         | 16				                  | 0
 
 Given the intended use case of many tasks, it's worth also considering the total number of pages available, and how much overhead is consumed in paging for a typical task.  With 5 bit pages, there are 2^14 pages in the system, but a single task will use a page for the task, up to 33 pages of stack page table, up to 33 pages for a data segment.  67 page each 5 bits is 2144 words.  With 8 bits pages, there are 2^11 pages in the system, and a single task will use a page for the task, 1 page for stack page table, and 1 page for a data segment.  3 pages each 8 bits is 768 words.  However, The smallest possible overhead for a task with 5-bit pages is only 5 pages or 160 words, while the smallest possible overhead for a task with 8-bit pages remains 768 words.
 

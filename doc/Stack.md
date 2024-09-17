@@ -12,13 +12,13 @@ Because the overall CPU architecture is strongly segmented, it is not possible f
 
 To prevent manipulation of the return address, the return address is hidden just past the partition when executing a call.  As part of the call, the caller will tell the CPU an offset to use for the return address, and the CPU will move the floor just past that offset during the calling process.  Because each call frame can access any address past the partition, the caller can easily set up the environment for the callee.  Once the call takes place, the callee cannot manipulate its own return address, nor can the callee access the local state of the caller.
 
---- stack grows this way --->
-val val val return_address old_floor param param ...
-^           ^                        ^
-|           |                        |
-|           |                        +-- floor will end up here after call
-|           +-- caller specifies this offset (keeps all offsets positive)
-+-- floor is here before the call
+      --- stack grows this way --->
+      val val val return_address old_floor param param ...
+      ^           ^                        ^
+      |           |                        |
+      |           |                        +-- floor will end up here after call
+      |           +-- caller specifies this offset (keeps all offsets positive)
+      +-- floor is here before the call
 
 Note: This eliminates the possibility of inout or reference parameters.  Because each frame is a forced new context, the best we can do is copy return values back at each frame.  This seems like a rather substantial performance downside, so it is worth considering how to improve the situation.  A few ideas exist so far:
 

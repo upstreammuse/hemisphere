@@ -1,6 +1,7 @@
 		CU: ROM(MxN)
 I_VAL		index(M)	next(M)		I_NEXT_INT
 				next_source	I_NEXT_SEL
+				update_pc	PC_TICK
 
 
 		I: Reg(N)
@@ -10,8 +11,8 @@ CLK		clock
 
 
 		IR: Reg(16)
-		in(16)		out_high(8)	I_HIGH
-		write_enable	out_low(8)	I_LOW
+???		in(16)		out_high(8)	I_HIGH
+???		write_enable	out_low(8)	I_LOW
 CLK		clock
 
 
@@ -27,11 +28,19 @@ I_NEXT_EXT	in1(8)
 I_NEXT_SEL	select
 
 
+		PC: Reg(16)
+???incr prev	in(16)		out_high(15)	???addr for IR load
+PC_TICK		write_enable	out_low(1)	PC_LSB
+CLK		clock
+
+
+
 CU Contents
-|	| Next	| NextSource
-|---	|---	|---
-| 0	| 1	| 0
-| 1	| 0	| 0
+|	| Next	| NextSource	| UpdatePC
+|---	|---	|---		|---
+| 0	| 1	| 0		| 0
+| 1	| 0	| 0		| 0
+
 
 
 Output		Signal		Input
@@ -42,4 +51,5 @@ IRSelect.out	-I_NEXT_EXT->	ISelect.in1
 CU.next		-I_NEXT_INT->	ISelect.in0
 CU.next_source	-I_NEXT_SEL->	ISelect.select
 I.out		-I_VAL->	CU.index
-		-PC_LSB->	IRSelect.select
+PC.out_low	-PC_LSB->	IRSelect.select
+CU.update_pc	-PC_TICK->	PC.write_enable

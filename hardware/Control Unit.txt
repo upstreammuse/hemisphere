@@ -77,3 +77,10 @@ CU.update_pc	-PC_TICK->	PC.write_enable
 
 Bus		Decoder		Output		Selector
 MEM_BUS				Memory.data
+
+
+
+# Notes
+
+Need a device to detect if the PC has changed such that IR needs a reload.  And can this be safe given that code could be changed externally without PC changing?
+- yield only on PC changes that force IR reload anyway?

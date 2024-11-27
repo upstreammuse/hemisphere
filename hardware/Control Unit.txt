@@ -49,10 +49,10 @@ CLK		clock
 # ROM Tables
 
 CU
-|	| Next	| NextSource	| UpdatePC
-|---	|---	|---		|---
-| 0	| 1	| 0		| 0
-| 1	| 0	| 0		| 0
+|	| Next	| NextSource	| UpdatePC	| UpdateIR
+|---	|---	|---		|---		|---
+| 0	| 1	| 0		| 0		| 0
+| 1	| 0	| 0		| 0		| 0
 
 
 

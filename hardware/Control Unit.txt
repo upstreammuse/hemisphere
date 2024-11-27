@@ -1,0 +1,45 @@
+		CU: ROM(MxN)
+I_VAL		index(M)	next(M)		I_NEXT_INT
+				next_source	I_NEXT_SEL
+
+
+		I: Reg(N)
+I_NEXT		in(N)		out(N)		I_VAL
+TRUE		write_enable
+CLK		clock
+
+
+		IR: Reg(16)
+		in(16)		out_high(8)	I_HIGH
+		write_enable	out_low(8)	I_LOW
+CLK		clock
+
+
+		IRSelect: Mux(8)
+I_LOW		in0(8)		out(8)		I_NEXT_EXT
+I_HIGH		in1(8)
+PC_LSB		select
+
+
+		ISelect: Mux(N>=8)
+I_NEXT_INT	in0(N)		out(N)		I_NEXT
+I_NEXT_EXT	in1(8)
+I_NEXT_SEL	select
+
+
+CU Contents
+|	| Next	| NextSource
+|---	|---	|---
+| 0	| 1	| 0
+| 1	| 0	| 0
+
+
+Output		Signal		Input
+IR.out_high	-I_HIGH->	IRSelect.in1
+IR.out_low	-I_LOW->	IRSelect.in0
+ISelect.out	-I_NEXT->	I.in
+IRSelect.out	-I_NEXT_EXT->	ISelect.in1
+CU.next		-I_NEXT_INT->	ISelect.in0
+CU.next_source	-I_NEXT_SEL->	ISelect.select
+I.out		-I_VAL->	CU.index
+		-PC_LSB->	IRSelect.select

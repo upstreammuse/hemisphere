@@ -1,3 +1,5 @@
+# Architectural Blocks
+
 		CU: ROM(MxN)
 I_VAL		index(M)	next(M)		I_NEXT_INT
 				next_source	I_NEXT_SEL
@@ -35,13 +37,17 @@ CLK		clock
 
 
 
-CU Contents
+# ROM Tables
+
+CU
 |	| Next	| NextSource	| UpdatePC
 |---	|---	|---		|---
 | 0	| 1	| 0		| 0
 | 1	| 0	| 0		| 0
 
 
+
+# Signal Connections
 
 Output		Signal		Input
 IR.out_high	-I_HIGH->	IRSelect.in1

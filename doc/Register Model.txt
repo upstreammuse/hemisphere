@@ -1,0 +1,54 @@
+Stack uses HP notation of XYZT for now, just for convenience.
+
+
+LoadN	RN->X	load from register N into X, replacing X contents
+StoreN	X->RN	store from X into register N
+Load	[Y]->X	load contents of memory address at Y into X, replacing X contents
+Store	X->[Y]	store contents of X to memory address Y
+Push	X>>>T	duplicate X into Y, pushing the other layers deeper, losing value of T
+Pop	X<<<T	duplicate T into Z, popping the other layers shallower, losing value of X
+
+Each register has a permission level attached to it.  If the current operating permission depth is greater than the register's permission level, then LoadN and StoreN issue a fault condition to the next lower layer.  Note that the next lower layer may not be low enough, and thus faults may extend through several layers as they are recursively serviced by each layer.  This allows an arbitrary depth of VM hierarchy, with the lowest permission layers even implementing new instructions.
+
+
+IR	instruction register holds 16 bits of code
+PC[0]	LSB of program counter selects high or low byte of IR
+	8 bits of IR are one possible index into CU matrix
+	N bits of CU output are one possible index into CU matrix
+	when CU indexes itself, this needs to be clocked somewhere
+i	CU index register, starts with a byte of IR and goes from there
+	this holds the CU output when the CU determines to index itself
+	this includes the selection bit that indicates whether IR or i is the CU index
+	not needed, i is always the CU index, it just happens to equal IR to begin with
+
+[PC]->IR
+[PC]->i
+CU[i].next->i
+
+
+
+Control Unit
+
+The control unit (CU) is an indexed array (EEPROM, SRAM, etc.) of sufficient width to convert a control signal 'step' into the signals needed to control the latches, muxes, etc. within the chip.  The CU output is a function of its input index register, designated I.  I is wide enough to hold the max number of steps needed in the CU sequence.  Following are steps the CU needs to be able to sequence, and steps should be combined when possible to do them in parallel.
+
+[PC]->IR	load instructions into IR based on PC
+IR[0..1]->I	load instruction from IR to I based on PC lower bit
+CU[I].next->I	load CU index from the 'next index' field of current CU output
+PC++		increment PC
+		when PC increments from an even instruction to an odd instruction (other way around?), there does not need to be another IR fetch.  TBD where this logic goes.
+
+
+
+CU Layout
+
+This CU layout demonstrates a CU that does nothing except cycle through its entire address space
+
+I  TBD  next
+0  ...  1
+1  ...  2
+2  ...  3
+3  ...  0
+
+Enable write to I
+Select IR[0/1] input to I
+PC low bit as IR selection

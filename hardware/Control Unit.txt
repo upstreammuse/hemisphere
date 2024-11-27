@@ -4,6 +4,7 @@
 I_VAL		index(M)	next(M)		I_NEXT_INT
 				next_source	I_NEXT_SEL
 				update_pc	PC_TICK
+				update_ir	IR_TICK
 
 
 		I: Reg(N)
@@ -13,8 +14,8 @@ CLK		clock
 
 
 		IR: Reg(16)
-???		in(16)		out_high(8)	I_HIGH
-???		write_enable	out_low(8)	I_LOW
+MEM_BUS		in(16)		out_high(8)	I_HIGH
+IR_TICK		write_enable	out_low(8)	I_LOW
 CLK		clock
 
 
@@ -30,8 +31,16 @@ I_NEXT_EXT	in1(8)
 I_NEXT_SEL	select
 
 
+		Memory: SRAM(512Kx16)
+PC_ADDR		addr(19)	data(16)	MEM_BUS
+MEM_BUS		data(16)
+???TRUE		output_enable
+???FALSE	write_enable
+TRUE		chip_select
+
+
 		PC: Reg(16)
-???incr prev	in(16)		out_high(15)	???addr for IR load
+???incr prev	in(16)		out_high(15)	PC_ADDR
 PC_TICK		write_enable	out_low(1)	PC_LSB
 CLK		clock
 
@@ -57,5 +66,14 @@ IRSelect.out	-I_NEXT_EXT->	ISelect.in1
 CU.next		-I_NEXT_INT->	ISelect.in0
 CU.next_source	-I_NEXT_SEL->	ISelect.select
 I.out		-I_VAL->	CU.index
+CU.update_ir	-IR_TICK->	IR.write_enable
+PC.out_high	-PC_ADDR->	Memory.addr
 PC.out_low	-PC_LSB->	IRSelect.select
 CU.update_pc	-PC_TICK->	PC.write_enable
+
+
+
+# Bus Connections
+
+Bus		Decoder		Output		Selector
+MEM_BUS				Memory.data

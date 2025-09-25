@@ -6,6 +6,7 @@
 #include "spicerack/counter.h"
 #include "spicerack/output.h"
 #include "spicerack/signal.h"
+#include "spicerack/signalset.h"
 #include "spicerack/watcher.h"
 
 int main(void) {
@@ -64,6 +65,15 @@ int main(void) {
       for (i = 0; i < 4; i++) {
          watcherFree(w[i]);
       }
+   }
+
+   printf("*** signal set test\n");
+   {
+      struct SignalSet* set = signalSetNew(50);
+      struct AndGate* gate = andGateNew();
+      signalSetAt(set, 13);
+      signalSetMap(set, 15, andGateInputA(gate));
+      signalSetFree(set);
    }
 
    return 0;
